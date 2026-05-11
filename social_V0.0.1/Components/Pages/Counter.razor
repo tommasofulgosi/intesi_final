@@ -3,11 +3,12 @@
 
 <PageTitle>Counter</PageTitle>
 
-<h1>Counter</h1>
+<RadzenText Text="Counter" TextStyle="TextStyle.H3" TagName="TagName.H1" />
 
-<p role="status">Current count: @currentCount</p>
-
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<RadzenCard class="rz-my-12 rz-mx-auto" Style="max-width: 420px;">
+    <RadzenText TextStyle="TextStyle.Subtitle1">Current count: @currentCount</RadzenText>
+    <RadzenButton Click=@IncrementCount Text="Click me" ButtonStyle="ButtonStyle.Primary" />
+</RadzenCard>
 
 @code {
     private int currentCount = 0;
