@@ -1,10 +1,15 @@
 using social_V0._0._1.Components;
+using Radzen;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddRadzenComponents();
+builder.Services.AddScoped(sp =>
+    new Microsoft.Data.SqlClient.SqlConnection(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
