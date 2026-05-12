@@ -1,3 +1,4 @@
+using Microsoft.Data.SqlClient; // Necessario per SqlConnection
 using Radzen;
 using social_V0._0._1.Components;
 using social_V0._0._1.Services;
@@ -11,11 +12,12 @@ builder.Services.AddRazorComponents()
 // 2. Aggiungi i servizi Radzen (necessari per i componenti grafici)
 builder.Services.AddRadzenComponents();
 
-// 3. Configura la connessione al Database per Dapper
-// Nota: viene iniettato uno scope che apre la connessione usando la stringa in appsettings.json
+// 3. Configura la connessione al Database
+// Assicurati che nel file appsettings.json ci sia la stringa "DefaultConnection"
 builder.Services.AddScoped(sp =>
     new SqlConnection(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// 4. Registra il tuo servizio PostService
 builder.Services.AddScoped<PostService>();
 
 var app = builder.Build();
@@ -32,10 +34,10 @@ app.UseHttpsRedirection();
 // Importante per le immagini e i file CSS/JS di Radzen
 app.UseStaticFiles();
 
-// Protezione Antiforgery (standard in .NET 8/9+)
+// Protezione Antiforgery
 app.UseAntiforgery();
 
-// Mappatura degli asset statici (ottimizzazione .NET 9)
+// Mappatura degli asset statici (Nuova feature .NET 9/10)
 app.MapStaticAssets();
 
 // Configura i componenti Razor per girare in modalità InteractiveServer
