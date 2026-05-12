@@ -1,16 +1,239 @@
 ﻿@page "/"
+@using social_V0._0._1.Models
+@using social_V0._0._1.Services
+@inject PostService MyService
 
-<h1>Counter</h1>
+<div class="social-wrapper">
+    @* --- COLONNA SINISTRA: COMPLEANNI --- *@
+    <aside class="sidebar-left">
+        <div class="glass-card">
+            <div class="card-header-simple">
+                <span class="material-icons icon-blue">cake</span>
+                <h3 class="title-blue">Compleanni</h3>
+            </div>
+            <div class="divider"></div>
+            <div class="birthday-content">
+                <p class="text-muted">Nessun compleanno oggi 🎂</p>
+                @* Qui in futuro mapperai la lista dei compleanni dal DB *@
+            </div>
+        </div>
+    </aside>
 
-<p role="status">Current count: @currentCount</p>
+    @* --- COLONNA CENTRALE: FEED --- *@
+    <main class="feed-main">
+        @* BOX PER PUBBLICARE *@
+        <div class="glass-card publish-container">
+            <RadzenTextArea @bind-Value="@nuovoPostContenuto" 
+                            Placeholder="Cosa vuoi condividere con i colleghi?" 
+                            class="modern-textarea" />
+            <div class="action-row">
+                <button class="btn-intesi" @onclick="PubblicaPost">
+                    <span class="material-icons">send</span> Pubblica
+                </button>
+            </div>
+        </div>
 
-<button class="btn btn-primary" @onclick="IncrementCount">cliccami</button>
+        @* ELENCO POST *@
+        @if (posts == null)
+        {
+            <div class="loading-state">
+                <RadzenProgressBar ProgressValue="100" Mode="ProgressBarMode.Indeterminate" />
+                <p>Caricamento feed...</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var post in posts)
+            {
+                <div class="glass-card post-card">
+                    <div class="post-header">
+                        <div class="user-avatar">@post.Iniziali</div>
+                        <div class="user-meta">
+                            <span class="user-fullname">@post.Nome @post.Cognome</span>
+                            <span class="post-date">@post.Dipartimento • @post.DataPubblicazione.ToString("dd MMM yyyy, HH:mm")</span>
+                        </div>
+                    </div>
+                    <div class="post-body">
+                        @post.Contenuto
+                    </div>
+                    <div class="post-footer">
+                        <button class="footer-btn"><span class="material-icons">thumb_up_off_alt</span> Like</button>
+                        <button class="footer-btn"><span class="material-icons">chat_bubble_outline</span> Commenta</button>
+                    </div>
+                </div>
+            }
+        }
+    </main>
+</div>
+
+<style>
+    /* RESET E LAYOUT PRINCIPALE */
+    .social-wrapper {
+        display: flex;
+        flex-direction: row;
+        gap: 30px;
+        max-width: 1200px;
+        margin: 30px auto;
+        padding: 0 20px;
+        align-items: flex-start;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    /* COLONNE */
+    .sidebar-left {
+        flex: 0 0 280px; /* Larghezza fissa per i compleanni */
+        position: sticky;
+        top: 20px;
+    }
+
+    .feed-main {
+        flex: 1; /* Il feed prende tutto lo spazio rimanente */
+        max-width: 750px;
+    }
+
+    /* CARD STILE "GLASSMorphism" PULITO */
+    .glass-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+
+    /* HEADER COMPLEANNI */
+    .card-header-simple {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .title-blue {
+        color: #004a99;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .icon-blue { color: #004a99; }
+    .divider { height: 1px; background: #f1f5f9; margin: 10px 0 15px 0; }
+    .text-muted { color: #64748b; font-size: 0.9rem; text-align: center; }
+
+    /* AREA PUBBLICAZIONE */
+    .modern-textarea {
+        width: 100%;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        padding: 15px !important;
+        background: #f8fafc !important;
+        min-height: 100px;
+        transition: border 0.2s;
+    }
+
+    .modern-textarea:focus { border-color: #004a99 !important; }
+
+    .action-row {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 12px;
+    }
+
+    .btn-intesi {
+        background: #004a99;
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 30px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.1s, background 0.2s;
+    }
+
+    .btn-intesi:hover { background: #003366; transform: translateY(-1px); }
+
+    /* POST CARD */
+    .post-header { display: flex; align-items: center; gap: 12px; }
+
+    .user-avatar {
+        width: 48px;
+        height: 48px;
+        background: #004a99;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .user-meta { display: flex; flex-direction: column; }
+    .user-fullname { font-weight: 700; color: #1e293b; }
+    .post-date { font-size: 0.8rem; color: #64748b; }
+
+    .post-body {
+        margin: 15px 0;
+        font-size: 1rem;
+        color: #334155;
+        line-height: 1.6;
+        white-space: pre-wrap;
+    }
+
+    .post-footer {
+        border-top: 1px solid #f1f5f9;
+        padding-top: 12px;
+        display: flex;
+        gap: 20px;
+    }
+
+    .footer-btn {
+        background: none;
+        border: none;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .footer-btn:hover { color: #004a99; }
+</style>
 
 @code {
-    private int currentCount = 0;
+    private List<PostViewModel> posts;
+    private string nuovoPostContenuto = "";
 
-    private void IncrementCount()
+    protected override async Task OnInitializedAsync()
     {
-        currentCount++;
+        await RicaricaFeed();
+    }
+
+    private async Task RicaricaFeed()
+    {
+        posts = await MyService.GetAllPostsAsync();
+    }
+
+    private async Task PubblicaPost()
+    {
+        if (!string.IsNullOrWhiteSpace(nuovoPostContenuto))
+        {
+            try 
+            {
+                // Inseriamo con ID Utente 1 (Gianguido)
+                await MyService.InsertPostAsync(1, nuovoPostContenuto);
+                nuovoPostContenuto = "";
+                await RicaricaFeed();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Errore: {ex.Message}");
+            }
+        }
     }
 }

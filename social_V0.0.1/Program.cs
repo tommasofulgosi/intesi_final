@@ -1,5 +1,6 @@
-using social_V0._0._1.Components;
 using Radzen;
+using social_V0._0._1.Components;
+using social_V0._0._1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,8 @@ builder.Services.AddRadzenComponents();
 builder.Services.AddScoped(sp =>
     new Microsoft.Data.SqlClient.SqlConnection(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<PostService>();
 
 var app = builder.Build();
 
