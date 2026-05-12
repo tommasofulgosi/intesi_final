@@ -1,25 +1,32 @@
 ﻿@inherits LayoutComponentBase
+@using Radzen.Blazor
 
-<div class="page">
-    <div class="sidebar" style="width: 216px">
-        <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
-
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
-<RadzenComponents />
 <RadzenComponents @rendermode="InteractiveServer" />
+
+<div class="main-container">
+    <RadzenHeader Style="height: 65px; background: rgba(255,255,255,0.9); backdrop-filter: blur(5px); display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; width: 100%; align-items: center;">
+            
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <RadzenIcon Icon="hub" Style="color: #0866FF; font-size: 2rem;" />
+                <RadzenText Text="SocialIntesi" TextStyle="TextStyle.H6" Style="margin:0; font-weight:bold; color:#0866FF;" />
+            </div>
+
+            <div style="display: flex; justify-content: center;">
+                <div style="position: relative; width: 100%; max-width: 400px;">
+                    <RadzenIcon Icon="search" Style="position: absolute; left: 15px; top: 10px; color: #65676b; z-index: 5;" />
+                    <RadzenTextBox Placeholder="Cerca..."
+                                   Style="width: 100%; border-radius: 50px; padding-left: 45px; background-color: #f0f2f5; border: none; height: 40px;" />
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end;">
+                <RadzenButton Text="Accedi" ButtonStyle="ButtonStyle.Primary" />
+            </div>
+        </div>
+    </RadzenHeader>
+
+    <div class="center-content">
+        @Body
+    </div>
+</div>

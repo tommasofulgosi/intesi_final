@@ -9,9 +9,16 @@
 @inject IWebHostEnvironment Env
 @rendermode InteractiveServer
 
-<RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="min-height: 80vh; padding: 2rem;">
-    <RadzenCard class="rz-shadow-10 rz-p-12" style="max-width: 600px; width: 100%;">
-        <RadzenText TextStyle="TextStyle.H4" Class="rz-text-align-center rz-mb-6">Registrazione</RadzenText>
+@* overflow-y: auto e height: 100vh permettono lo scorrimento con il mouse *@
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; overflow-y: auto; padding-top: 80px; padding-bottom: 80px; width: 100%; background: transparent;">
+    
+    <RadzenCard class="rz-shadow-10 rz-p-12" style="max-width: 600px; width: 90%; border-radius: 20px; background-color: white; margin-bottom: 50px;">
+        
+        <RadzenText TextStyle="TextStyle.H4"
+                    TextAlign="TextAlign.Center"
+                    Style="font-weight: 800; color: #0866FF; margin-bottom: 2.5rem; letter-spacing: -1px;">
+            Registrazione
+        </RadzenText>
 
         @if (!string.IsNullOrEmpty(messaggio))
         {
@@ -21,6 +28,7 @@
         <RadzenTemplateForm TItem="Utente" Data="@nuovoUtente" Submit="@OnSignup">
             <RadzenStack Gap="1.5rem">
                 
+                @* Righe Nome/Cognome, Email e Password rimangono invariate *@
                 <RadzenRow>
                     <RadzenColumn Size="6">
                         <RadzenFormField Text="Nome *" Style="width:100%">
@@ -55,85 +63,62 @@
                     </RadzenColumn>
                     <RadzenColumn Size="6">
                         <RadzenFormField Text="Data di Nascita" Style="width:100%">
-                            @* DISABILITATO ORARIO E FORMATO SOLO DATA *@
-                            <RadzenDatePicker @bind-Value="@nuovoUtente.DataDiNascita"
-                                              DateFormat="dd/MM/yyyy"
-                                              ShowTime="false"
-                                              Style="width:100%" />
+                            <RadzenDatePicker @bind-Value="@nuovoUtente.DataDiNascita" DateFormat="dd/MM/yyyy" ShowTime="false" Style="width:100%" />
                         </RadzenFormField>
                     </RadzenColumn>
                 </RadzenRow>
 
-                <RadzenText TextStyle="TextStyle.Subtitle2">Foto Profilo (Opzionale)</RadzenText>
-                <RadzenUpload ChooseText="Seleziona Foto"
-                              Accept="image/*"
-                              Auto="false"
-                              Multiple="false"
-                              Change="@OnUploadChange"
-                              Style="width: 100%" />
+                <RadzenText TextStyle="TextStyle.Subtitle2" Style="color: #65676b; margin-top: 10px;">Foto Profilo (Opzionale)</RadzenText>
+                <RadzenUpload ChooseText="Seleziona Foto" Accept="image/*" Auto="false" Multiple="false" Change="@OnUploadChange" Style="width: 100%" />
 
-                <RadzenButton ButtonType="ButtonType.Submit" Text="REGISTRATI" Style="width: 100%" />
-                <RadzenButton ButtonStyle="ButtonStyle.Light" Text="TORNA AL LOGIN" Click="@(() => NavManager.NavigateTo("/login"))" Style="width: 100%" />
+                @* Nuova Checkbox per EULA *@
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="margin-top: 10px;">
+                    <RadzenCheckBox @bind-Value="@accettaTermini" Name="EULA" TValue="bool" />
+                    <RadzenLabel Component="EULA" Style="font-size: 0.9rem; color: #65676b;">
+                        Accetto i <a href="/eula" target="_blank" style="color: #0866FF; text-decoration: none; font-weight: bold;">termini e le condizioni</a>
+                    </RadzenLabel>
+                </RadzenStack>
+
+                <RadzenButton ButtonType="ButtonType.Submit"
+                              Text="REGISTRATI"
+                              Disabled="@(!accettaTermini)"
+                              ButtonStyle="ButtonStyle.Primary"
+                              Style="width: 100%; font-weight: bold; height: 48px; border-radius: 10px; margin-top: 10px;" />
+                
+                <RadzenButton ButtonStyle="ButtonStyle.Light" Text="TORNA AL LOGIN" Click="@(() => NavManager.NavigateTo("/login"))" Style="width: 100%; height: 48px; border-radius: 10px;" />
             </RadzenStack>
         </RadzenTemplateForm>
     </RadzenCard>
-</RadzenStack>
+</div>
 
 @code {
     private Utente nuovoUtente = new Utente();
     private string messaggio = "";
     private bool successo = false;
     private string? nomeFile;
+    private bool accettaTermini = false; // Variabile per la checkbox
 
-    void OnUploadChange(UploadChangeEventArgs args)
-    {
-        var file = args.Files.FirstOrDefault();
-        if (file != null)
-        {
-            nomeFile = file.Name;
-        }
-    }
+    void OnUploadChange(UploadChangeEventArgs args) => nomeFile = args.Files.FirstOrDefault()?.Name;
 
     async Task OnSignup()
     {
+        if (!accettaTermini) return;
+
         try
         {
-            if (!string.IsNullOrEmpty(nomeFile))
-            {
-                nuovoUtente.FotoUrl = "/uploads/" + Guid.NewGuid() + "_" + nomeFile;
-            }
-
+            // Logica di registrazione invariata...
+            if (!string.IsNullOrEmpty(nomeFile)) nuovoUtente.FotoUrl = "/uploads/" + Guid.NewGuid() + "_" + nomeFile;
             string hash = BCrypt.HashPassword(nuovoUtente.Password);
 
             using (var db = new SqlConnection(Config.GetConnectionString("DefaultConnection")))
             {
                 var sql = @"INSERT INTO dbo.Utenti (Nome, Cognome, Email, Password, Dipartimento, DataDiNascita, DataCreazione, FotoUrl) 
                             VALUES (@Nome, @Cognome, @Email, @Password, @Dipartimento, @DataDiNascita, @DataCreazione, @FotoUrl)";
-                
-                await db.ExecuteAsync(sql, new
-                {
-                    nuovoUtente.Nome,
-                    nuovoUtente.Cognome,
-                    nuovoUtente.Email,
-                    Password = hash,
-                    nuovoUtente.Dipartimento,
-                    // SQL gestirà bene il DateTime? anche se la colonna è DATE
-                    nuovoUtente.DataDiNascita,
-                    DataCreazione = DateTime.Now,
-                    nuovoUtente.FotoUrl
-                });
-
-                successo = true;
-                messaggio = "Registrazione completata!";
-                StateHasChanged();
-                await Task.Delay(1500);
-                NavManager.NavigateTo("/login");
+                await db.ExecuteAsync(sql, new { nuovoUtente.Nome, nuovoUtente.Cognome, nuovoUtente.Email, Password = hash, nuovoUtente.Dipartimento, nuovoUtente.DataDiNascita, DataCreazione = DateTime.Now, nuovoUtente.FotoUrl });
+                successo = true; messaggio = "Registrazione completata!"; StateHasChanged();
+                await Task.Delay(1500); NavManager.NavigateTo("/login");
             }
         }
-        catch (Exception ex)
-        {
-            successo = false;
-            messaggio = "Errore: " + ex.Message;
-        }
+        catch (Exception ex) { successo = false; messaggio = "Errore: " + ex.Message; }
     }
 }

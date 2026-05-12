@@ -3,25 +3,36 @@
 @using Microsoft.Data.SqlClient
 @using Dapper
 @using BCrypt.Net
+@using social_V0._0._1.Models
+@using social_V0._0._1.Services
 @inject IConfiguration Config
 @inject NavigationManager NavManager
+@inject SessionService Session
 @rendermode InteractiveServer
 
-<RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="min-height: 80vh;">
-    <RadzenCard class="rz-my-12 rz-mx-auto rz-p-12" style="max-width: 500px; width: 100%;">
-        <RadzenText TextStyle="TextStyle.H4" Class="rz-text-align-center rz-mb-6">Accedi</RadzenText>
+<div style="width: 100%; display: flex; justify-content: center; align-items: center; min-height: 70vh;">
+    <RadzenCard class="rz-shadow-10 rz-p-12" style="max-width: 450px; width: 100%; border-radius: 15px; background-color: white;">
+        
+        <RadzenText TextStyle="TextStyle.H4" Class="rz-text-align-center rz-mb-6"
+                    Style="font-weight: bold; color: #0866FF; font-family: 'Segoe UI', sans-serif;">
+            Accedi
+        </RadzenText>
         
         @if (!string.IsNullOrEmpty(messaggio))
         {
-            <RadzenAlert AlertStyle="AlertStyle.Danger" Class="rz-mb-4">@messaggio</RadzenAlert>
+            <RadzenAlert AlertStyle="AlertStyle.Danger" Class="rz-mb-4" Variant="Variant.Flat">@messaggio</RadzenAlert>
         }
 
         <RadzenLogin AllowRegister="true" AllowRememberMe="false"
                      Login="@OnLogin"
                      Register="@(() => NavManager.NavigateTo("/signup"))"
                      LoginText="ENTRA" RegisterText="Crea account" />
+
+        <div style="text-align: center; margin-top: 20px; border-top: 1px solid #f0f2f5; padding-top: 20px;">
+            <RadzenLink Text="Password dimenticata?" Path="/recovery" Style="font-size: 0.9rem; color: #0866FF;" />
+        </div>
     </RadzenCard>
-</RadzenStack>
+</div>
 
 @code {
     private string messaggio = "";
@@ -32,11 +43,12 @@
         {
             using (var db = new SqlConnection(Config.GetConnectionString("DefaultConnection")))
             {
-                var sql = "SELECT Password FROM dbo.Utenti WHERE Email = @User";
-                var riga = await db.QueryFirstOrDefaultAsync<dynamic>(sql, new { User = args.Username });
+                var sql = "SELECT * FROM dbo.Utenti WHERE Email = @User";
+                var utente = await db.QueryFirstOrDefaultAsync<Utente>(sql, new { User = args.Username });
 
-                if (riga != null && BCrypt.Verify(args.Password, (string)riga.Password))
+                if (utente != null && BCrypt.Verify(args.Password, utente.Password))
                 {
+                    Session.Login(utente);
                     NavManager.NavigateTo("/home");
                 }
                 else
@@ -47,7 +59,7 @@
         }
         catch (Exception ex)
         {
-            messaggio = "Errore: " + ex.Message;
+            messaggio = "Errore di connessione al database.";
         }
     }
 }

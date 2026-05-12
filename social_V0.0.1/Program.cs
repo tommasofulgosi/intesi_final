@@ -4,6 +4,8 @@ using Microsoft.Data.SqlClient;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddScoped<social_V0._0._1.Services.SessionService>();
+
 // 1. Aggiungi i servizi per i componenti Razor e Interactive Server
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
