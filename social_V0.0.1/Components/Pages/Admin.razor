@@ -1,0 +1,121 @@
+﻿@page "/admin"
+@page "/admin/{PostId:int}"
+@using Microsoft.Data.SqlClient
+@using social_V0._0._1.Models
+@using social_V0._0._1.Components.Pages
+@inject IConfiguration Config
+@inject NavigationManager Navigation
+@inject UserSession Session
+@rendermode InteractiveServer
+
+<div class="container mt-4" style="max-width: 800px;">
+    <div class="card shadow border-0">
+        <div class="card-header @(PostId.HasValue ? "bg-warning text-dark" : "bg-primary text-white") p-3">
+            <h3 class="mb-0">@(PostId.HasValue ? " Modifica Annuncio" : " Nuovo Annuncio")</h3>
+        </div>
+        <div class="card-body p-4">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Titolo</label>
+                <input type="text" class="form-control form-control-lg" @bind="nuovoPost.Titolo" placeholder="Titolo accattivante..." />
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold">Messaggio</label>
+                <textarea class="form-control" @bind="nuovoPost.Contenuto" rows="6" placeholder="Scrivi qui il corpo del messaggio..."></textarea>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Reparto Destinatario</label>
+                    <select class="form-select" @bind="nuovoPost.Reparto">
+                        <option value="Tutti"> Tutti i reparti</option>
+                        <option value="Produzione">Produzione</option>
+                        <option value="Sviluppo"> Sviluppo</option>
+                        <option value="Amministrazione"> Amministrazione</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Tipo</label>
+                    <select class="form-select" @bind="nuovoPost.Tipo">
+                        <option value="Info"> Info Generale</option>
+                        <option value="Evento"> Evento</option>
+                        <option value="Chiusura"> Chiusura</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-check form-switch mb-4">
+                <input class="form-check-input" type="checkbox" @bind="nuovoPost.IsBroadcast" id="bcSwitch">
+                <label class="form-check-label fw-bold text-danger" for="bcSwitch">❗ segna come IMPORTANTE</label>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button class="btn btn-success btn-lg flex-grow-1 fw-bold" @onclick="SalvaPost">
+                    @(PostId.HasValue ? "SALVA MODIFICHE" : "PUBBLICA ORA")
+                </button>
+               
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int? PostId { get; set; }
+    private Post nuovoPost = new Post();
+    private string CS => Config.GetConnectionString("DefaultConnection") ?? "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (PostId.HasValue)
+        {
+            using SqlConnection conn = new SqlConnection(CS);
+            using SqlCommand cmd = new SqlCommand("SELECT * FROM Posts WHERE Id = @id", conn);
+            cmd.Parameters.AddWithValue("@id", PostId.Value);
+            await conn.OpenAsync();
+            using SqlDataReader rdr = await cmd.ExecuteReaderAsync();
+            if (await rdr.ReadAsync())
+            {
+                nuovoPost.Titolo = rdr["Titolo"].ToString() ?? "";
+                nuovoPost.Contenuto = rdr["Contenuto"].ToString() ?? "";
+                nuovoPost.Reparto = rdr["Reparto"].ToString() ?? "";
+                nuovoPost.Tipo = rdr["Tipo"].ToString() ?? "";
+                nuovoPost.IsBroadcast = (bool)rdr["IsBroadcast"];
+                
+                // Se non sei l'autore, non puoi modificare
+                if (rdr["Autore"].ToString() != Session.Username)
+                    Navigation.NavigateTo("/bacheca");
+            }
+        }
+    }
+
+    private async Task SalvaPost()
+    {
+        if (string.IsNullOrWhiteSpace(nuovoPost.Titolo)) return;
+
+        using SqlConnection conn = new SqlConnection(CS);
+        string query = PostId.HasValue
+            ? "UPDATE Posts SET Titolo=@t, Contenuto=@c, Reparto=@r, Tipo=@tp, IsBroadcast=@b WHERE Id=@id"
+            : "INSERT INTO Posts (Titolo, Contenuto, Reparto, Tipo, IsBroadcast, DataCreazione, Autore) VALUES (@t, @c, @r, @tp, @b, @d, @a)";
+
+        using SqlCommand cmd = new SqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@t", nuovoPost.Titolo);
+        cmd.Parameters.AddWithValue("@c", nuovoPost.Contenuto);
+        cmd.Parameters.AddWithValue("@r", nuovoPost.Reparto);
+        cmd.Parameters.AddWithValue("@tp", nuovoPost.Tipo);
+        cmd.Parameters.AddWithValue("@b", nuovoPost.IsBroadcast);
+
+        if (PostId.HasValue)
+        {
+            cmd.Parameters.AddWithValue("@id", PostId.Value);
+        }
+        else
+        {
+            cmd.Parameters.AddWithValue("@d", DateTime.Now);
+            cmd.Parameters.AddWithValue("@a", Session.Username ?? "Anonimo");
+        }
+
+        await conn.OpenAsync();
+        await cmd.ExecuteNonQueryAsync();
+        Navigation.NavigateTo("/bacheca");
+    }
+}

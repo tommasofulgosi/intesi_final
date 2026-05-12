@@ -1,26 +1,29 @@
 using social_V0._0._1.Components;
+using social_V0._0._1.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Aggiungi i servizi per Blazor
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// Permette di leggere la stringa di connessione da appsettings.json
+builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
+
+builder.Services.AddScoped<UserSession>();
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+
 app.UseHttpsRedirection();
-
 app.UseAntiforgery();
-
 app.MapStaticAssets();
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

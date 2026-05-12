@@ -1,0 +1,169 @@
+﻿@page "/bacheca"
+@using Microsoft.Data.SqlClient
+@using social_V0._0._1.Models
+@inject UserSession Session
+@inject IConfiguration Config
+@inject NavigationManager Nav
+@implements IDisposable
+@rendermode InteractiveServer
+
+@if (!Session.IsLoggedIn)
+{
+    @* MESSAGGIO DI BLOCCO SE NON LOGGATO *@
+    <div class="container mt-5">
+        <div class="alert alert-warning shadow p-5 text-center border-3">
+            <h1 class="display-1">🛑</h1>
+            <h2 class="text-danger fw-bold">ACCESSO PROIBITO</h2>
+            <p class="fs-4">Devi prima identificarti per poter leggere la bacheca.</p>
+            <button class="btn btn-dark btn-lg mt-3" @onclick='() => Nav.NavigateTo("/")'>Vai alla pagina di Login</button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container mt-4">
+        <div class="mb-4">
+            <h2 class="fw-bold">Bacheca Aziendale</h2>
+            <hr />
+        </div>
+
+        <div class="row">
+            @if (posts.Count == 0)
+            {
+                <div class="col-12 text-center mt-5">
+                    <p class="text-muted fs-4">Nessun post presente. Sii il primo a scrivere!</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var post in posts)
+                {
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 shadow-sm @(post.IsBroadcast ? "border-danger border-3" : "border-0")">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        @if (post.IsBroadcast)
+                                        {
+                                            <span class="text-danger fw-bold fs-4 me-2">❗</span>
+                                        }
+                                        <span class="badge bg-info text-dark">@post.Tipo</span>
+                                    </div>
+
+                                    @* PROTEZIONE: Mostra i tasti solo se l'utente loggato è l'autore *@
+                                    @if (post.Autore == Session.Username)
+                                    {
+                                        <div>
+                                            <button class="btn btn-sm btn-outline-primary me-1" @onclick='() => Nav.NavigateTo($"/admin/{post.Id}")' title="Modifica">✏️</button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => Elimina(post.Id)" title="Elimina">🗑️</button>
+                                        </div>
+                                    }
+                                </div>
+                                <h4 class="fw-bold mt-2 @(post.IsBroadcast ? "text-danger" : "")">@post.Titolo</h4>
+                                <p style="white-space: pre-wrap;">@post.Contenuto</p>
+                            </div>
+                            <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                                <small class="text-muted">✍️ @post.Autore - @post.DataCreazione.ToString("dd/MM HH:mm")</small>
+                                <button class="btn btn-sm @(post.GiaMessoLike ? "btn-primary" : "btn-outline-primary")" @onclick="() => Like(post)">
+                                    👍 Letto (@post.LikesCount)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private List<Post> posts = new();
+    private string CS => Config.GetConnectionString("DefaultConnection") ?? "";
+    private System.Timers.Timer? _timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Session.IsLoggedIn)
+        {
+            await Carica();
+
+            // Configura il timer per aggiornare la bacheca ogni 5 secondi
+            _timer = new System.Timers.Timer(1500);
+            _timer.Elapsed += async (s, e) => await InvokeAsync(async () =>
+            {
+                await Carica();
+                StateHasChanged();
+            });
+            _timer.AutoReset = true;
+            _timer.Start();
+        }
+    }
+
+    private async Task Carica()
+    {
+        try
+        {
+            var listaAggiornata = new List<Post>();
+            using SqlConnection conn = new SqlConnection(CS);
+            string sql = @"SELECT p.*, 
+                           (SELECT COUNT(*) FROM PostLikes WHERE PostId = p.Id) as LikesCount,
+                           (SELECT COUNT(*) FROM PostLikes WHERE PostId = p.Id AND Username = @user) as HasLiked
+                           FROM Posts p ORDER BY DataCreazione DESC";
+            
+            using SqlCommand cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@user", Session.Username ?? "");
+            
+            await conn.OpenAsync();
+            using SqlDataReader rdr = await cmd.ExecuteReaderAsync();
+            while (await rdr.ReadAsync())
+            {
+                listaAggiornata.Add(new Post
+                {
+                    Id = (int)rdr["Id"],
+                    Titolo = rdr["Titolo"].ToString()!,
+                    Contenuto = rdr["Contenuto"].ToString()!,
+                    IsBroadcast = (bool)rdr["IsBroadcast"],
+                    Autore = rdr["Autore"].ToString()!,
+                    DataCreazione = (DateTime)rdr["DataCreazione"],
+                    LikesCount = (int)rdr["LikesCount"],
+                    GiaMessoLike = (int)rdr["HasLiked"] > 0,
+                    Tipo = rdr["Tipo"].ToString()!
+                });
+            }
+            posts = listaAggiornata;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Errore SQL: " + ex.Message);
+        }
+    }
+
+    private async Task Like(Post p)
+    {
+        using SqlConnection conn = new SqlConnection(CS);
+        await conn.OpenAsync();
+        string sql = !p.GiaMessoLike ? "INSERT INTO PostLikes (PostId, Username) VALUES (@pid, @u)" : "DELETE FROM PostLikes WHERE PostId=@pid AND Username=@u";
+        using SqlCommand cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@pid", p.Id);
+        cmd.Parameters.AddWithValue("@u", Session.Username!);
+        await cmd.ExecuteNonQueryAsync();
+        await Carica();
+    }
+
+    private async Task Elimina(int id)
+    {
+        using SqlConnection conn = new SqlConnection(CS);
+        using SqlCommand cmd = new SqlCommand("DELETE FROM Posts WHERE Id = @id", conn);
+        cmd.Parameters.AddWithValue("@id", id);
+        await conn.OpenAsync();
+        await cmd.ExecuteNonQueryAsync();
+        await Carica();
+    }
+
+    // Ferma il timer quando l'utente cambia pagina per non sprecare risorse
+    public void Dispose()
+    {
+        _timer?.Stop();
+        _timer?.Dispose();
+    }
+}

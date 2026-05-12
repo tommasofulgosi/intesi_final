@@ -1,0 +1,52 @@
+﻿@page "/"
+@using social_V0._0._1.Models
+@inject UserSession Session
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="container mt-5">
+    @if (Session.IsLoggedIn)
+    {
+        @* MESSAGGIO SE CERCHI DI TORNARE AL LOGIN MENTRE SEI CONNESSO *@
+        <div class="card shadow border-danger mx-auto text-center" style="max-width: 500px;">
+            <div class="card-body p-5">
+                <h2 class="text-danger">⚠️ Accesso Negato</h2>
+                <p class="fs-5 mt-3">Sei già autenticato come <b>@Session.Username</b>.</p>
+                <p>Per cambiare utente devi prima fare il <b>Log out</b> dal menu laterale.</p>
+                <button class="btn btn-primary mt-3" @onclick='() => Nav.NavigateTo("/bacheca")'>Torna alla Bacheca</button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow mx-auto" style="max-width: 400px; border-radius: 15px;">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h3 class="mb-0">Accesso Portale</h3>
+            </div>
+            <div class="card-body p-4 text-center">
+                <p class="text-muted">Inserisci il tuo nome per continuare</p>
+                <input type="text" class="form-control form-control-lg mb-3" @bind="usernameInput" placeholder="Es: Mario Rossi" />
+                <button class="btn btn-success btn-lg w-100" @onclick="Entra">ENTRA E CREA</button>
+                @if (!string.IsNullOrEmpty(errore))
+                {
+                    <p class="text-danger mt-3">@errore</p>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private string? usernameInput;
+    private string? errore;
+
+    private void Entra()
+    {
+        if (!string.IsNullOrWhiteSpace(usernameInput))
+        {
+            Session.Login(usernameInput);
+            Nav.NavigateTo("/bacheca");
+        }
+        else { errore = "⚠️ Inserisci un nome per accedere!"; }
+    }
+}

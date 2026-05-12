@@ -1,30 +1,74 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@rendermode InteractiveServer
+@using social_V0._0._1.Models
+@inject NavigationManager Navigation
+@inject UserSession Session
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">social_V0.0.1</a>
+        <a class="navbar-brand" href="">social_V0._0._1</a>
     </div>
 </div>
 
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+<div class="nav-scrollable d-flex flex-column justify-content-between" style="height: calc(100vh - 3.5rem);">
     <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
+        
+        @* Se l'utente NON è loggato, mostra solo il tasto Log in *@
+        @if (!Session.IsLoggedIn)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <span class="bi bi-person-badge-fill-nav-menu" aria-hidden="true"></span> Log in
+                </NavLink>
+            </div>
+        }
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
+        @* Se l'utente È loggato, mostra Bacheca e Aggiungi *@
+        @if (Session.IsLoggedIn)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="bacheca">
+                    <span class="bi bi-grid-3x3-gap-fill-nav-menu" aria-hidden="true"></span> Bacheca Social
+                </NavLink>
+            </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Aggiungi Evento
+                </NavLink>
+            </div>
+        }
     </nav>
+
+    @* Tasto Logout visibile solo se loggati *@
+    @if (Session.IsLoggedIn)
+    {
+        <div class="nav-item px-3 mb-3">
+            <button class="nav-link btn btn-link text-white w-100 text-start border-0" @onclick="EseguiLogout">
+                <span class="bi bi-box-arrow-left" aria-hidden="true" style="margin-right: 10px;"></span>
+                Log out (@Session.Username)
+            </button>
+        </div>
+    }
 </div>
 
+@code {
+    protected override void OnInitialized()
+    {
+        // Si iscrive all'evento: quando la sessione cambia, il menu si aggiorna
+        Session.OnChange += StateHasChanged;
+    }
+
+    private void EseguiLogout()
+    {
+        Session.Logout();
+        Navigation.NavigateTo("/", true);
+    }
+
+    // Importante: pulisce l'evento quando il componente viene rimosso
+    public void Dispose()
+    {
+        Session.OnChange -= StateHasChanged;
+    }
+}
