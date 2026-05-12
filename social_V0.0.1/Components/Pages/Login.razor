@@ -37,7 +37,7 @@
 
                 if (riga != null && BCrypt.Verify(args.Password, (string)riga.Password))
                 {
-                    NavManager.NavigateTo("/");
+                    NavManager.NavigateTo("/home");
                 }
                 else
                 {
