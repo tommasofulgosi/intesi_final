@@ -4,31 +4,41 @@ using social_V0._0._1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// 1. Aggiungi i servizi per i componenti Razor e Interactive Server
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// 2. Aggiungi i servizi Radzen (necessari per i componenti grafici)
 builder.Services.AddRadzenComponents();
+
+// 3. Configura la connessione al Database per Dapper
+// Nota: viene iniettato uno scope che apre la connessione usando la stringa in appsettings.json
 builder.Services.AddScoped(sp =>
-    new Microsoft.Data.SqlClient.SqlConnection(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+    new SqlConnection(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<PostService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configurazione della pipeline delle richieste HTTP
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+
 app.UseHttpsRedirection();
 
+// Importante per le immagini e i file CSS/JS di Radzen
+app.UseStaticFiles();
+
+// Protezione Antiforgery (standard in .NET 8/9+)
 app.UseAntiforgery();
 
+// Mappatura degli asset statici (ottimizzazione .NET 9)
 app.MapStaticAssets();
+
+// Configura i componenti Razor per girare in modalità InteractiveServer
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
