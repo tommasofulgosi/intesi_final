@@ -1,91 +1,53 @@
-﻿@page "/login"
+﻿@page "/"
+@page "/login"
 @using Microsoft.Data.SqlClient
 @using Dapper
 @using BCrypt.Net
 @inject IConfiguration Config
 @inject NavigationManager NavManager
-
-<PageTitle>Login</PageTitle>
-
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-4 card p-4 shadow">
-            <h3 class="text-center">Accedi al Social</h3>
-
-            <div class="mb-3">
-                <label>Username</label>
-                <input class="form-control" @bind="usernameLogin" placeholder="Inserisci username" />
-            </div>
-
-            <div class="mb-3">
-                <label>Password</label>
-                <input type="password" class="form-control" @bind="passwordLogin" placeholder="Inserisci password" />
-            </div>
-
-            <button class="btn btn-success w-100" @onclick="EseguiLogin">Entra</button>
-
-            @if (!string.IsNullOrEmpty(messaggio))
-            {
-                <div class="alert @classeMessaggio mt-3">@messaggio</div>
-            }
-        </div>
-    </div>
-</div>
-
 @rendermode InteractiveServer
 
-@code {
-    private string usernameLogin = "";
-    private string passwordLogin = "";
-    private string messaggio = "";
-    private string classeMessaggio = "alert-danger";
+<RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="min-height: 80vh;">
+    <RadzenCard class="rz-my-12 rz-mx-auto rz-p-12" style="max-width: 500px; width: 100%;">
+        <RadzenText TextStyle="TextStyle.H4" Class="rz-text-align-center rz-mb-6">Accedi</RadzenText>
+        
+        @if (!string.IsNullOrEmpty(messaggio))
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Danger" Class="rz-mb-4">@messaggio</RadzenAlert>
+        }
 
-    private async Task EseguiLogin()
+        <RadzenLogin AllowRegister="true" AllowRememberMe="false"
+                     Login="@OnLogin"
+                     Register="@(() => NavManager.NavigateTo("/signup"))"
+                     LoginText="ENTRA" RegisterText="Crea account" />
+    </RadzenCard>
+</RadzenStack>
+
+@code {
+    private string messaggio = "";
+
+    async Task OnLogin(LoginArgs args)
     {
         try
         {
-            string connectionString = Config.GetConnectionString("DefaultConnection") ?? "";
-
-            using (var db = new SqlConnection(connectionString))
+            using (var db = new SqlConnection(Config.GetConnectionString("DefaultConnection")))
             {
-                // 1. Cerchiamo l'utente nel database tramite lo username
-                var sql = "SELECT * FROM Utenti WHERE Username = @User";
-                var utenteTrovato = await db.QueryFirstOrDefaultAsync<Utente>(sql, new { User = usernameLogin });
+                var sql = "SELECT Password FROM dbo.Utenti WHERE Email = @User";
+                var riga = await db.QueryFirstOrDefaultAsync<dynamic>(sql, new { User = args.Username });
 
-                if (utenteTrovato != null)
+                if (riga != null && BCrypt.Verify(args.Password, (string)riga.Password))
                 {
-                    // 2. L'utente esiste! Ora verifichiamo la password con BCrypt
-                    // NOTA: Se avevi salvato password in chiaro (come il tuo primo test), 
-                    // Verify darà errore. Funziona solo con quelle criptate con HashPassword.
-                    bool passwordValida = BCrypt.Verify(passwordLogin, utenteTrovato.PasswordHash);
-
-                    if (passwordValida)
-                    {
-                        messaggio = "Login effettuato! Reindirizzamento...";
-                        classeMessaggio = "alert-success";
-                        StateHasChanged();
-
-                        // Aspettiamo 2 secondi e andiamo alla Home
-                        await Task.Delay(2000);
-                        NavManager.NavigateTo("/");
-                    }
-                    else
-                    {
-                        messaggio = "Password errata!";
-                        classeMessaggio = "alert-danger";
-                    }
+                    NavManager.NavigateTo("/");
                 }
                 else
                 {
-                    messaggio = "Utente non trovato!";
-                    classeMessaggio = "alert-danger";
+                    messaggio = "Email o Password errati.";
                 }
             }
         }
         catch (Exception ex)
         {
-            messaggio = "Errore di connessione: " + ex.Message;
-            classeMessaggio = "alert-danger";
+            messaggio = "Errore: " + ex.Message;
         }
     }
 }
