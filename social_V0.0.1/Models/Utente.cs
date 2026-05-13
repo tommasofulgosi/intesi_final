@@ -3,35 +3,44 @@ using System.ComponentModel.DataAnnotations;
 
 namespace social_V0._0._1.Models
 {
+    /// <summary>
+    /// Rappresenta l'entità Utente allineata alla tabella dbo.Utenti del database.
+    /// </summary>
     public class Utente
     {
+        // --- IDENTIFICATIVI ---
         [Key]
         public int UtenteId { get; set; }
 
+        // --- INFORMAZIONI ANAGRAFICHE ---
         [Required(ErrorMessage = "Il nome è obbligatorio")]
-        [StringLength(50)] // Allineato al DB
-        public string Nome { get; set; } = string.Empty; // Inizializzato per evitare warning CS8618
+        [StringLength(50)]
+        public string Nome { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Il cognome è obbligatorio")]
-        [StringLength(50)] // Allineato al DB
+        [StringLength(50)]
         public string Cognome { get; set; } = string.Empty;
 
+        // --- CREDENZIALI E CONTATTI ---
         [Required(ErrorMessage = "L'email è obbligatoria")]
-        [EmailAddress]
-        [StringLength(50)] // Allineato allo screenshot del DB
+        [EmailAddress(ErrorMessage = "Inserire un indirizzo email valido")]
+        [StringLength(50)]
         public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "La password è obbligatoria")]
         public string Password { get; set; } = string.Empty;
 
-        [StringLength(50)] // Corretto da 10 a 50 come richiesto
-        public string? Dipartimento { get; set; } // Nullable per i campi non obbligatori
+        // --- DETTAGLI AZIENDALI E PERSONALI ---
+        [StringLength(50)]
+        public string? Dipartimento { get; set; }
 
+        [DataType(DataType.Date)]
         public DateTime? DataDiNascita { get; set; }
 
+        // --- METADATI DI SISTEMA ---
         public DateTime DataCreazione { get; set; } = DateTime.Now;
 
-        [StringLength(255)] // Lunghezza come da screenshot
+        [StringLength(255)]
         public string? FotoUrl { get; set; }
     }
 }

@@ -5,25 +5,29 @@ using social_V0._0._1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddScoped<social_V0._0._1.Services.SessionService>();
+// --- REGISTRAZIONE DEI SERVIZI (Dependency Injection) ---
 
-// 1. Aggiungi i servizi per i componenti Razor e Interactive Server
+// Gestione della sessione utente e servizi applicativi
+builder.Services.AddScoped<SessionService>();
+builder.Services.AddScoped<PostService>();
+
+// Supporto per componenti Razor e Rendering Interattivo (Server-side)
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// 2. Aggiungi i servizi Radzen (necessari per i componenti grafici)
+// Iniezione dei componenti e delle utility grafiche Radzen
 builder.Services.AddRadzenComponents();
 
-// 3. Configura la connessione al Database per Dapper
-// Nota: viene iniettato uno scope che apre la connessione usando la stringa in appsettings.json
+// Configurazione della connessione SQL tramite Dapper
+// Utilizza la stringa di connessione definita in appsettings.json
 builder.Services.AddScoped(sp =>
     new SqlConnection(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddScoped<PostService>();
-
 var app = builder.Build();
 
-// Configurazione della pipeline delle richieste HTTP
+// --- CONFIGURAZIONE DELLA PIPELINE HTTP (Middleware) ---
+
+// Gestione degli errori e sicurezza HSTS per ambienti di produzione
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
@@ -32,16 +36,16 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Importante per le immagini e i file CSS/JS di Radzen
+// Abilitazione dei file statici (CSS, immagini, JS di Radzen)
 app.UseStaticFiles();
 
-// Protezione Antiforgery (standard in .NET 8/9+)
+// Protezione contro attacchi Cross-Site Request Forgery (CSRF)
 app.UseAntiforgery();
 
-// Mappatura degli asset statici (ottimizzazione .NET 9)
+// Ottimizzazione del caricamento degli asset statici (Nuovo in .NET 9)
 app.MapStaticAssets();
 
-// Configura i componenti Razor per girare in modalità InteractiveServer
+// Configurazione del componente root 'App' e attivazione della modalità interattiva
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

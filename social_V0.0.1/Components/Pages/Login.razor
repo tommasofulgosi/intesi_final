@@ -10,49 +10,66 @@
 @inject SessionService Session
 @rendermode InteractiveServer
 
-<RadzenCard class="rz-shadow-10 rz-p-12" style="max-width: 450px; width: 90%; border-radius: 15px; background-color: white;">
+<RadzenCard class="rz-shadow-10 rz-p-12 login-card">
     
-    @* Titolo che usa il blu della tua palette Intesi *@
-    <RadzenText TextStyle="TextStyle.H4" Class="rz-text-align-center rz-mb-6"
+    @* Intestazione della Card *@
+    <RadzenText TextStyle="TextStyle.H4"
+                Class="rz-text-align-center rz-mb-6"
                 Style="font-weight: 800; color: var(--brand-primary); font-family: 'Segoe UI', sans-serif;">
         Accedi
     </RadzenText>
     
+    @* Visualizzazione messaggi di errore *@
     @if (!string.IsNullOrEmpty(messaggio))
     {
-        <RadzenAlert AlertStyle="AlertStyle.Danger" Class="rz-mb-4" Variant="Variant.Flat">@messaggio</RadzenAlert>
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Class="rz-mb-4" Variant="Variant.Flat">
+            @messaggio
+        </RadzenAlert>
     }
 
-    @* RadzenLogin personalizzato per i colori della palette *@
+    @* Componente di Login Radzen con localizzazione in italiano *@
     <RadzenLogin UserText="Email"
-                 AllowRegister="true"
-                 AllowRememberMe="false"
-                 Login="@OnLogin"
-                 Register="@(() => NavManager.NavigateTo("/signup"))"
-                 ResetPasswordText="Password dimenticata?"
+                 PasswordText="Password"
                  LoginText="Accedi"
+                 AllowRegister="true"
                  RegisterMessageText="Non sei registrato?"
                  RegisterText="Crea account"
-                 Style="--rz-primary: var(--brand-action); --rz-button-primary-background-color: var(--brand-primary); --rz-button-border-radius: 10px;" />
+                 AllowRememberMe="false"
+                 AllowForgotPassword="true"
+                 ForgotPasswordText="Password dimenticata?"
+                 Login="@OnLogin"
+                 Register="@(() => NavManager.NavigateTo("/signup"))"
+                 ForgotPassword="@(() => NavManager.NavigateTo("/recovery"))"
+                 Style="--rz-primary: var(--brand-action);
+    --rz-button-primary-background-color: var(--brand-primary);
+    --rz-button-border-radius: var(--brand-radius);" />
 
-    <div style="text-align: center; margin-top: 20px; border-top: 1px solid var(--brand-border); padding-top: 20px;">
-        <RadzenLink Text="Termini e condizioni" Path="/eula"
+    @* Footer della card con link legale *@
+    <div class="login-footer">
+        <RadzenLink Text="Termini e condizioni"
+                    Path="/eula"
                     Style="font-size: 0.9rem; color: var(--brand-action); font-weight: 600;" />
     </div>
+
 </RadzenCard>
 
 @code {
     private string messaggio = "";
 
+    /// <summary>
+    /// Gestisce il processo di autenticazione dell'utente
+    /// </summary>
     async Task OnLogin(LoginArgs args)
     {
         try
         {
             using (var db = new SqlConnection(Config.GetConnectionString("DefaultConnection")))
             {
+                // Ricerca dell'utente tramite email (username nel form)
                 var sql = "SELECT * FROM dbo.Utenti WHERE Email = @User";
                 var utente = await db.QueryFirstOrDefaultAsync<Utente>(sql, new { User = args.Username });
 
+                // Validazione delle credenziali tramite BCrypt
                 if (utente != null && BCrypt.Verify(args.Password, utente.Password))
                 {
                     Session.Login(utente);
@@ -64,7 +81,7 @@
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             messaggio = "Errore di connessione al database.";
         }
