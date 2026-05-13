@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using Microsoft.Data.SqlClient;
 using social_V0._0._1.Models;
-using System.Data;
 
 namespace social_V0._0._1.Services
 {
@@ -11,20 +10,21 @@ namespace social_V0._0._1.Services
 
         public async Task InsertPostAsync(int utenteId, string contenuto)
         {
+            if (string.IsNullOrWhiteSpace(contenuto)) return;
+
             using (var connection = new SqlConnection(_connectionString))
             {
-                string sql = @"INSERT INTO dbo.Post (UtenteId, Contenuto, DataPubblicazione, LikeCount) 
-                               VALUES (@uid, @cont, GETDATE(), 0)";
+                // Verifichiamo che l'utente esista davvero prima di inserire
+                var userExists = await connection.ExecuteScalarAsync<int>(
+                    "SELECT COUNT(1) FROM dbo.Utenti WHERE UtenteId = @id", new { id = utenteId });
 
-                var command = new SqlCommand(sql, connection);
-                command.Parameters.AddWithValue("@uid", utenteId);
-                command.Parameters.AddWithValue("@cont", contenuto);
-
-                await connection.OpenAsync();
-                await command.ExecuteNonQueryAsync();
+                if (userExists > 0)
+                {
+                    var sql = "INSERT INTO dbo.Posts (UtenteId, Contenuto, DataPubblicazione) VALUES (@uId, @cont, GETDATE())";
+                    await connection.ExecuteAsync(sql, new { uId = utenteId, cont = contenuto });
+                }
             }
         }
-
         public async Task<List<PostViewModel>> GetAllPostsAsync()
         {
             var lista = new List<PostViewModel>();

@@ -83,11 +83,18 @@
                                 <RadzenText TextStyle="TextStyle.H6" Class="rz-font-weight-bold">Crea un nuovo post</RadzenText>
                                 <RadzenTextArea @bind-Value="@nuovoPostContenuto" Placeholder="A cosa stai pensando?" Rows="3" Class="rz-w-100 rz-border-radius-1" Style="background-color: var(--rz-base-background-color);" />
                                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-                                    <RadzenButton Click="@PubblicaPost" Text="Pubblica nel Feed" Icon="send" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Large" Class="rz-border-radius-10 rz-px-8" />
+                                    <RadzenButton Click="@PubblicaPost"
+                                                  Text="Pubblica nel Feed"
+                                                  Icon="send"
+                                                  ButtonStyle="ButtonStyle.Primary"
+                                                  @disabled="@(string.IsNullOrWhiteSpace(nuovoPostContenuto) || utenteLoggato == null)"
+                                                  Size="ButtonSize.Large"
+                                                  Class="rz-border-radius-10 rz-px-8" />
                                 </RadzenStack>
                             </RadzenStack>
                         </RadzenCard>
 
+                        @* ELENCO POST *@
                         @if (posts != null)
                         {
                             @foreach (var post in posts)
@@ -95,21 +102,25 @@
                                 <RadzenCard Variant="Variant.Filled" Class="rz-border-radius-2 rz-shadow-1 rz-p-6">
                                     <RadzenStack Gap="1.5rem">
                                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
-                                            <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Class="rz-background-color-primary rz-color-white rz-border-radius-circle" Style="width: 56px; height: 56px; flex-shrink: 0;">
-                                                <RadzenText TextStyle="TextStyle.H6" Class="rz-m-0 rz-color-white">@post.Iniziali</RadzenText>
-                                            </RadzenStack>
+                    
+                                            <div style="width: 56px; height: 56px; border-radius: 50%; overflow: hidden; background-color: var(--rz-primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                                @if (!string.IsNullOrEmpty(post.FotoUrl))
+                                                {
+                                                    @* Usiamo ~/ per puntare alla root di wwwroot *@
+                                                    <img src="@post.FotoUrl.TrimStart('/')" style="width: 100%; height: 100%; object-fit: cover;" />
+                                                }
+                                                else
+                                                {
+                                                    <span style="color: white; font-weight: bold; font-size: 1.2rem;">@post.Iniziali</span>
+                                                }
+                                            </div>
+
                                             <RadzenStack Gap="0">
                                                 <RadzenText TextStyle="TextStyle.Subtitle1" Class="rz-m-0 rz-font-weight-bold">@post.Nome @post.Cognome</RadzenText>
                                                 <RadzenText TextStyle="TextStyle.Caption" Class="rz-m-0 rz-color-text-secondary">
                                                     <span style="color: var(--rz-primary); font-weight: 600;">@post.Dipartimento</span> • @post.DataPubblicazione.ToString("dd MMM yyyy, HH:mm")
                                                 </RadzenText>
                                             </RadzenStack>
-                                        </RadzenStack>
-                                        <RadzenText TextStyle="TextStyle.Body1" Style="white-space: pre-wrap;">@post.Contenuto</RadzenText>
-                                        <RadzenSeparator />
-                                        <RadzenStack Orientation="Orientation.Horizontal" Gap="2rem">
-                                            <RadzenButton Variant="Variant.Text" Icon="thumb_up_off_alt" Text="Mi piace" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small" />
-                                            <RadzenButton Variant="Variant.Text" Icon="chat_bubble_outline" Text="Commenta" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small" />
                                         </RadzenStack>
                                     </RadzenStack>
                                 </RadzenCard>
@@ -126,6 +137,7 @@
     private List<PostViewModel> posts;
     private List<Avviso> listaAvvisi;
     private List<Utente> listaCompleanni;
+    private Utente utenteLoggato;
     private string nuovoPostContenuto = "";
 
     protected override async Task OnInitializedAsync() => await CaricaDati();
@@ -142,11 +154,23 @@
         }
     }
 
-    private async Task PubblicaPost() {
-        if (!string.IsNullOrWhiteSpace(nuovoPostContenuto)) {
-            await MyService.InsertPostAsync(1, nuovoPostContenuto);
-            nuovoPostContenuto = "";
-            await CaricaDati();
+    private async Task PubblicaPost()
+    {
+        // Verifica di sicurezza: testo non vuoto e utente esistente
+        if (!string.IsNullOrWhiteSpace(nuovoPostContenuto) && utenteLoggato != null)
+        {
+            try
+            {
+                await MyService.InsertPostAsync(utenteLoggato.UtenteId, nuovoPostContenuto);
+                nuovoPostContenuto = "";
+                await CaricaDati();
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                // Gestisci l'errore (es. utente non trovato dopo TRUNCATE)
+                Console.WriteLine($"Errore invio: {ex.Message}");
+            }
         }
     }
 }
