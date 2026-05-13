@@ -10,29 +10,36 @@
 @inject SessionService Session
 @rendermode InteractiveServer
 
-<div style="width: 100%; display: flex; justify-content: center; align-items: center; min-height: 70vh;">
-    <RadzenCard class="rz-shadow-10 rz-p-12" style="max-width: 450px; width: 100%; border-radius: 15px; background-color: white;">
-        
-        <RadzenText TextStyle="TextStyle.H4" Class="rz-text-align-center rz-mb-6"
-                    Style="font-weight: bold; color: #0866FF; font-family: 'Segoe UI', sans-serif;">
-            Accedi
-        </RadzenText>
-        
-        @if (!string.IsNullOrEmpty(messaggio))
-        {
-            <RadzenAlert AlertStyle="AlertStyle.Danger" Class="rz-mb-4" Variant="Variant.Flat">@messaggio</RadzenAlert>
-        }
+<RadzenCard class="rz-shadow-10 rz-p-12" style="max-width: 450px; width: 90%; border-radius: 15px; background-color: white;">
+    
+    @* Titolo che usa il blu della tua palette Intesi *@
+    <RadzenText TextStyle="TextStyle.H4" Class="rz-text-align-center rz-mb-6"
+                Style="font-weight: 800; color: var(--brand-primary); font-family: 'Segoe UI', sans-serif;">
+        Accedi
+    </RadzenText>
+    
+    @if (!string.IsNullOrEmpty(messaggio))
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Class="rz-mb-4" Variant="Variant.Flat">@messaggio</RadzenAlert>
+    }
 
-        <RadzenLogin AllowRegister="true" AllowRememberMe="false"
-                     Login="@OnLogin"
-                     Register="@(() => NavManager.NavigateTo("/signup"))"
-                     LoginText="ENTRA" RegisterText="Crea account" />
+    @* RadzenLogin personalizzato per i colori della palette *@
+    <RadzenLogin UserText="Email"
+                 AllowRegister="true"
+                 AllowRememberMe="false"
+                 Login="@OnLogin"
+                 Register="@(() => NavManager.NavigateTo("/signup"))"
+                 ResetPasswordText="Password dimenticata?"
+                 LoginText="Accedi"
+                 RegisterMessageText="Non sei registrato?"
+                 RegisterText="Crea account"
+                 Style="--rz-primary: var(--brand-action); --rz-button-primary-background-color: var(--brand-primary); --rz-button-border-radius: 10px;" />
 
-        <div style="text-align: center; margin-top: 20px; border-top: 1px solid #f0f2f5; padding-top: 20px;">
-            <RadzenLink Text="Password dimenticata?" Path="/recovery" Style="font-size: 0.9rem; color: #0866FF;" />
-        </div>
-    </RadzenCard>
-</div>
+    <div style="text-align: center; margin-top: 20px; border-top: 1px solid var(--brand-border); padding-top: 20px;">
+        <RadzenLink Text="Termini e condizioni" Path="/eula"
+                    Style="font-size: 0.9rem; color: var(--brand-action); font-weight: 600;" />
+    </div>
+</RadzenCard>
 
 @code {
     private string messaggio = "";

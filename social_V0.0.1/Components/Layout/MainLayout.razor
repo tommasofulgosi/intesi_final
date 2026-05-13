@@ -1,27 +1,35 @@
 ﻿@inherits LayoutComponentBase
 @using Radzen.Blazor
+@inject NavigationManager NavManager
 
 <RadzenComponents @rendermode="InteractiveServer" />
 
 <div class="main-container">
-    <RadzenHeader Style="height: 65px; background: rgba(255,255,255,0.9); backdrop-filter: blur(5px); display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid rgba(0,0,0,0.1);">
+    <RadzenHeader Style="height: 65px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); display: flex; align-items: center; padding: 0 20px; border-bottom: 2px solid var(--brand-primary); position: fixed; top: 0; width: 100%; z-index: 1000;">
         <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; width: 100%; align-items: center;">
             
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <RadzenIcon Icon="hub" Style="color: #0866FF; font-size: 2rem;" />
-                <RadzenText Text="SocialIntesi" TextStyle="TextStyle.H6" Style="margin:0; font-weight:bold; color:#0866FF;" />
+            @* LOGO *@
+            <div style="display: flex; align-items: center;">
+                <a href="/" style="display: flex; align-items: center; text-decoration: none;">
+                    <img src="intesi-software-house.png" alt="Intesi Logo" style="height: 35px; width: auto;" />
+                </a>
             </div>
 
+            @* RICERCA *@
             <div style="display: flex; justify-content: center;">
                 <div style="position: relative; width: 100%; max-width: 400px;">
-                    <RadzenIcon Icon="search" Style="position: absolute; left: 15px; top: 10px; color: #65676b; z-index: 5;" />
+                    <RadzenIcon Icon="search" Style="position: absolute; left: 15px; top: 10px; color: var(--brand-primary); z-index: 5;" />
                     <RadzenTextBox Placeholder="Cerca..."
-                                   Style="width: 100%; border-radius: 50px; padding-left: 45px; background-color: #f0f2f5; border: none; height: 40px;" />
+                                   Style="width: 100%; border-radius: 50px; padding-left: 45px; background-color: #f0f2f5; border: 1px solid var(--brand-border); height: 40px;" />
                 </div>
             </div>
 
+            @* BOTTONE ACCEDI *@
             <div style="display: flex; justify-content: flex-end;">
-                <RadzenButton Text="Accedi" ButtonStyle="ButtonStyle.Primary" />
+                <RadzenButton Text="Accedi"
+                              ButtonStyle="ButtonStyle.Primary"
+                              Style="background-color: var(--brand-primary); border-radius: 10px; font-weight: bold; padding: 0 25px;"
+                              Click="@(() => NavManager.NavigateTo("/login"))" />
             </div>
         </div>
     </RadzenHeader>

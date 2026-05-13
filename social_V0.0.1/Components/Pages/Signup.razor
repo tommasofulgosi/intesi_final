@@ -9,94 +9,87 @@
 @inject IWebHostEnvironment Env
 @rendermode InteractiveServer
 
-@* overflow-y: auto e height: 100vh permettono lo scorrimento con il mouse *@
-<div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; overflow-y: auto; padding-top: 80px; padding-bottom: 80px; width: 100%; background: transparent;">
+<RadzenCard class="rz-shadow-10 rz-p-12" style="max-width: 600px; width: 90%; border-radius: 20px; background-color: white; margin-top: 20px; margin-bottom: 50px;">
     
-    <RadzenCard class="rz-shadow-10 rz-p-12" style="max-width: 600px; width: 90%; border-radius: 20px; background-color: white; margin-bottom: 50px;">
-        
-        <RadzenText TextStyle="TextStyle.H4"
-                    TextAlign="TextAlign.Center"
-                    Style="font-weight: 800; color: #0866FF; margin-bottom: 2.5rem; letter-spacing: -1px;">
-            Registrazione
-        </RadzenText>
+    <RadzenText TextStyle="TextStyle.H4"
+                TextAlign="TextAlign.Center"
+                Style="font-weight: 800; color: var(--brand-primary); margin-bottom: 2rem; letter-spacing: -1px;">
+        Registrazione
+    </RadzenText>
 
-        @if (!string.IsNullOrEmpty(messaggio))
-        {
-            <RadzenAlert AlertStyle="@(successo ? AlertStyle.Success : AlertStyle.Danger)" Variant="Variant.Flat" Class="rz-mb-4">@messaggio</RadzenAlert>
-        }
+    @if (!string.IsNullOrEmpty(messaggio))
+    {
+        <RadzenAlert AlertStyle="@(successo ? AlertStyle.Success : AlertStyle.Danger)" Variant="Variant.Flat" Class="rz-mb-4">@messaggio</RadzenAlert>
+    }
 
-        <RadzenTemplateForm TItem="Utente" Data="@nuovoUtente" Submit="@OnSignup">
-            <RadzenStack Gap="1.5rem">
-                
-                @* Righe Nome/Cognome, Email e Password rimangono invariate *@
-                <RadzenRow>
-                    <RadzenColumn Size="6">
-                        <RadzenFormField Text="Nome *" Style="width:100%">
-                            <RadzenTextBox @bind-Value="@nuovoUtente.Nome" Name="Nome" Style="width: 100%;" />
-                            <RadzenRequiredValidator Component="Nome" Text="Richiesto" />
-                        </RadzenFormField>
-                    </RadzenColumn>
-                    <RadzenColumn Size="6">
-                        <RadzenFormField Text="Cognome *" Style="width:100%">
-                            <RadzenTextBox @bind-Value="@nuovoUtente.Cognome" Name="Cognome" Style="width: 100%;" />
-                            <RadzenRequiredValidator Component="Cognome" Text="Richiesto" />
-                        </RadzenFormField>
-                    </RadzenColumn>
-                </RadzenRow>
+    <RadzenTemplateForm TItem="Utente" Data="@nuovoUtente" Submit="@OnSignup">
+        <RadzenStack Gap="1.5rem">
+            
+            <RadzenRow>
+                <RadzenColumn Size="6">
+                    <RadzenFormField Text="Nome *" Style="width:100%">
+                        <RadzenTextBox @bind-Value="@nuovoUtente.Nome" Name="Nome" Style="width: 100%;" />
+                        <RadzenRequiredValidator Component="Nome" Text="Richiesto" />
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="6">
+                    <RadzenFormField Text="Cognome *" Style="width:100%">
+                        <RadzenTextBox @bind-Value="@nuovoUtente.Cognome" Name="Cognome" Style="width: 100%;" />
+                        <RadzenRequiredValidator Component="Cognome" Text="Richiesto" />
+                    </RadzenFormField>
+                </RadzenColumn>
+            </RadzenRow>
 
-                <RadzenFormField Text="Email *" Style="width:100%">
-                    <RadzenTextBox @bind-Value="@nuovoUtente.Email" Name="Email" Style="width: 100%;" />
-                    <RadzenRequiredValidator Component="Email" Text="Richiesto" />
-                    <RadzenEmailValidator Component="Email" Text="Email non valida" />
-                </RadzenFormField>
+            <RadzenFormField Text="Email *" Style="width:100%">
+                <RadzenTextBox @bind-Value="@nuovoUtente.Email" Name="Email" Style="width: 100%;" />
+                <RadzenRequiredValidator Component="Email" Text="Richiesto" />
+                <RadzenEmailValidator Component="Email" Text="Email non valida" />
+            </RadzenFormField>
 
-                <RadzenFormField Text="Password *" Style="width:100%">
-                    <RadzenPassword @bind-Value="@nuovoUtente.Password" Name="Password" Style="width: 100%;" />
-                    <RadzenRequiredValidator Component="Password" Text="Richiesto" />
-                </RadzenFormField>
+            <RadzenFormField Text="Password *" Style="width:100%">
+                <RadzenPassword @bind-Value="@nuovoUtente.Password" Name="Password" Style="width: 100%;" />
+                <RadzenRequiredValidator Component="Password" Text="Richiesto" />
+            </RadzenFormField>
 
-                <RadzenRow>
-                    <RadzenColumn Size="6">
-                        <RadzenFormField Text="Dipartimento" Style="width:100%">
-                            <RadzenTextBox @bind-Value="@nuovoUtente.Dipartimento" MaxLength="50" Style="width: 100%;" />
-                        </RadzenFormField>
-                    </RadzenColumn>
-                    <RadzenColumn Size="6">
-                        <RadzenFormField Text="Data di Nascita" Style="width:100%">
-                            <RadzenDatePicker @bind-Value="@nuovoUtente.DataDiNascita" DateFormat="dd/MM/yyyy" ShowTime="false" Style="width:100%" />
-                        </RadzenFormField>
-                    </RadzenColumn>
-                </RadzenRow>
+            <RadzenRow>
+                <RadzenColumn Size="6">
+                    <RadzenFormField Text="Dipartimento" Style="width:100%">
+                        <RadzenTextBox @bind-Value="@nuovoUtente.Dipartimento" MaxLength="50" Style="width: 100%;" />
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="6">
+                    <RadzenFormField Text="Data di Nascita" Style="width:100%">
+                        <RadzenDatePicker @bind-Value="@nuovoUtente.DataDiNascita" DateFormat="dd/MM/yyyy" ShowTime="false" Style="width:100%" />
+                    </RadzenFormField>
+                </RadzenColumn>
+            </RadzenRow>
 
-                <RadzenText TextStyle="TextStyle.Subtitle2" Style="color: #65676b; margin-top: 10px;">Foto Profilo (Opzionale)</RadzenText>
-                <RadzenUpload ChooseText="Seleziona Foto" Accept="image/*" Auto="false" Multiple="false" Change="@OnUploadChange" Style="width: 100%" />
+            <RadzenText TextStyle="TextStyle.Subtitle2" Style="color: #65676b; margin-top: 10px;">Foto Profilo (Opzionale)</RadzenText>
+            <RadzenUpload ChooseText="Seleziona Foto" Accept="image/*" Auto="false" Multiple="false" Change="@OnUploadChange" Style="width: 100%" />
 
-                @* Nuova Checkbox per EULA *@
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="margin-top: 10px;">
-                    <RadzenCheckBox @bind-Value="@accettaTermini" Name="EULA" TValue="bool" />
-                    <RadzenLabel Component="EULA" Style="font-size: 0.9rem; color: #65676b;">
-                        Accetto i <a href="/eula" target="_blank" style="color: #0866FF; text-decoration: none; font-weight: bold;">termini e le condizioni</a>
-                    </RadzenLabel>
-                </RadzenStack>
-
-                <RadzenButton ButtonType="ButtonType.Submit"
-                              Text="REGISTRATI"
-                              Disabled="@(!accettaTermini)"
-                              ButtonStyle="ButtonStyle.Primary"
-                              Style="width: 100%; font-weight: bold; height: 48px; border-radius: 10px; margin-top: 10px;" />
-                
-                <RadzenButton ButtonStyle="ButtonStyle.Light" Text="TORNA AL LOGIN" Click="@(() => NavManager.NavigateTo("/login"))" Style="width: 100%; height: 48px; border-radius: 10px;" />
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="margin-top: 10px;">
+                <RadzenCheckBox @bind-Value="@accettaTermini" Name="EULA" TValue="bool" />
+                <RadzenLabel Component="EULA" Style="font-size: 0.9rem; color: #65676b;">
+                    Accetto i <a href="/eula" target="_blank" style="color: var(--brand-action); text-decoration: none; font-weight: bold;">termini e le condizioni</a>
+                </RadzenLabel>
             </RadzenStack>
-        </RadzenTemplateForm>
-    </RadzenCard>
-</div>
+
+            <RadzenButton ButtonType="ButtonType.Submit"
+                          Text="REGISTRATI"
+                          Disabled="@(!accettaTermini)"
+                          Style="width: 100%; background-color: var(--brand-primary); font-weight: bold; height: 48px; border-radius: 10px; margin-top: 10px;" />
+            
+            <RadzenButton ButtonStyle="ButtonStyle.Light" Text="TORNA AL LOGIN" Click="@(() => NavManager.NavigateTo("/login"))" Style="width: 100%; height: 48px; border-radius: 10px;" />
+        </RadzenStack>
+    </RadzenTemplateForm>
+</RadzenCard>
 
 @code {
     private Utente nuovoUtente = new Utente();
     private string messaggio = "";
     private bool successo = false;
     private string? nomeFile;
-    private bool accettaTermini = false; // Variabile per la checkbox
+    private bool accettaTermini = false;
 
     void OnUploadChange(UploadChangeEventArgs args) => nomeFile = args.Files.FirstOrDefault()?.Name;
 
@@ -106,7 +99,6 @@
 
         try
         {
-            // Logica di registrazione invariata...
             if (!string.IsNullOrEmpty(nomeFile)) nuovoUtente.FotoUrl = "/uploads/" + Guid.NewGuid() + "_" + nomeFile;
             string hash = BCrypt.HashPassword(nuovoUtente.Password);
 

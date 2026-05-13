@@ -1,7 +1,12 @@
 :root {
-    /* CAMBIA QUI I COLORI PER IL TUO GRADIENTE PERSONALIZZATO */
-    --social-gradient-start: #e0f2fe; /* Azzurro chiaro */
-    --social-gradient-end: #0866FF; /* Blu SocialIntesi */
+    /* GRADIENTE: dal grigio-azzurro chiaro al blu istituzionale Intesi */
+    --social-gradient-start: #e5edf6; /* Il colore più chiaro della tua palette */
+    --social-gradient-end: #005197; /* Il blu principale Intesi */
+    /* AZIONI: per bottoni e interazioni */
+    --brand-primary: #005197;
+    --brand-action: #0372ba;
+    --brand-border: #a7c2e0;
+    --brand-radius: 10px;
 }
 
 html, body {
@@ -9,10 +14,9 @@ html, body {
     padding: 0;
     height: 100vh;
     width: 100vw;
-    overflow: hidden; /* Evita scroll inutili */
+    overflow: hidden;
 }
 
-/* Sfondo con gradiente personalizzabile */
 .main-container {
     background: linear-gradient(135deg, var(--social-gradient-start), var(--social-gradient-end));
     min-height: 100vh;
@@ -21,18 +25,63 @@ html, body {
     flex-direction: column;
 }
 
-/* Rimuove i background predefiniti di Radzen che "coprono" il tuo */
 .rz-layout, .rz-body {
     background-color: transparent !important;
     margin: 0 !important;
     padding: 0 !important;
 }
 
-/* Centratura totale (Orizzontale e Verticale) del contenuto @Body */
+/* Centratura con spazio per la Navbar */
 .center-content {
     display: flex;
     flex: 1;
-    align-items: center; /* Centro Verticale */
-    justify-content: center; /* Centro Orizzontale */
+    align-items: center;
+    justify-content: center;
     width: 100%;
+    padding-top: 65px; /* Altezza della navbar */
 }
+.rz-button {
+    border-radius: 10px !important;
+}
+/* Forza il colore di tutti i link Radzen alla tua brand-action */
+.rz-link, .rz-login-register a {
+    color: var(--brand-action) !important;
+    text-decoration: none;
+}
+
+    .rz-link:hover, .rz-login-register a:hover {
+        color: var(--brand-primary) !important;
+        text-decoration: underline;
+    }
+
+/* Colore delle etichette (Username, Password, ecc.) */
+.rz-label {
+    color: #4b4b4b !important;
+}
+/* Impedisce il flicker e fissa la dimensione della card */
+.login-card {
+    max-width: 450px !important;
+    width: 90% !important;
+    border-radius: var(--brand-radius) !important;
+    background-color: white !important;
+    margin: auto;
+}
+
+/* Colore specifico per il bottone "Crea account" (Register Button) */
+.rz-login-register .rz-button {
+    background-color: var(--brand-action) !important;
+    color: white !important;
+}
+
+/* Stile per il link ai termini in fondo */
+.login-footer {
+    text-align: center;
+    margin-top: 20px;
+    border-top: 1px solid var(--brand-border);
+    padding-top: 20px;
+}
+
+    .login-footer .rz-link {
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
