@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/login"
 @using Microsoft.Data.SqlClient
 @using Dapper
 @using BCrypt.Net
@@ -36,7 +36,7 @@
 
                 if (riga != null && BCrypt.Verify(args.Password, (string)riga.Password))
                 {
-                    NavManager.NavigateTo("/home");
+                    NavManager.NavigateTo("/");
                 }
                 else
                 {
