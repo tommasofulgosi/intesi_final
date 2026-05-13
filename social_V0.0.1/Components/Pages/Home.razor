@@ -9,50 +9,43 @@
         <RadzenStack AlignItems="AlignItems.Center" Style="width: 100%;">
             <RadzenRow Gap="2rem" Style="width: 100%;">
                 
-                @* --- COLONNA SINISTRA --- *@
+                @* --- COLONNA SINISTRA (Compleanni e Avvisi) --- *@
                 <RadzenColumn Size="12" SizeMD="3">
                     <RadzenStack Gap="1.5rem" Style="position: sticky; top: 20px;">
                         
-                        @* COMPLEANNI DINAMICI *@
+                        @* COMPLEANNI *@
                         <RadzenCard Variant="Variant.Filled" Class="rz-border-radius-2 rz-shadow-1">
                             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Class="rz-mb-4">
                                 <RadzenIcon Icon="cake" IconColor="var(--rz-primary)" />
                                 <RadzenText TextStyle="TextStyle.H6" Class="rz-color-primary rz-font-weight-bold rz-m-0">Compleanni</RadzenText>
                             </RadzenStack>
                             <RadzenSeparator Class="rz-my-4" />
-                            
                             <RadzenStack Gap="0.8rem">
                                 @if (listaCompleanni == null || !listaCompleanni.Any())
                                 {
-                                    <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-text-secondary rz-text-align-center">
-                                        Nessun compleanno oggi 🎂
-                                    </RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-text-secondary rz-text-align-center">Nessun compleanno oggi 🎂</RadzenText>
                                 }
                                 else
                                 {
                                     @foreach (var festeggiato in listaCompleanni)
                                     {
                                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.8rem">
-                                            <div style="width: 36px; height: 36px; border-radius: 50%; background-color: var(--rz-secondary); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: bold; flex-shrink: 0;">
+                                            <div style="width: 36px; height: 36px; border-radius: 50%; background-color: var(--rz-secondary); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; flex-shrink: 0;">
                                                 @(festeggiato.Nome[0].ToString().ToUpper() + festeggiato.Cognome[0].ToString().ToUpper())
                                             </div>
-                                            <RadzenText TextStyle="TextStyle.Body2" Class="rz-font-weight-bold rz-m-0">
-                                                @festeggiato.Nome @festeggiato.Cognome
-                                            </RadzenText>
+                                            <RadzenText TextStyle="TextStyle.Body2" Class="rz-font-weight-bold rz-m-0">@festeggiato.Nome @festeggiato.Cognome</RadzenText>
                                         </RadzenStack>
                                     }
                                 }
                             </RadzenStack>
                         </RadzenCard>
 
-                        @* AVVISI DINAMICI *@
+                        @* AVVISI *@
                         <RadzenCard Variant="Variant.Filled" Class="rz-border-radius-2 rz-shadow-1" Style="background-color: #fff9e6; border: 1px solid #ffeeba;">
                             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Class="rz-mb-4">
                                 <RadzenIcon Icon="campaign" IconColor="#856404" />
                                 <RadzenText TextStyle="TextStyle.H6" Style="color: #856404; font-weight: bold;" Class="rz-m-0">Avvisi</RadzenText>
                             </RadzenStack>
-                            <RadzenSeparator Class="rz-my-2" Style="border-top: 1px solid #ffeeba;" />
-                            
                             <RadzenStack Gap="0.5rem">
                                 @if (listaAvvisi == null || !listaAvvisi.Any())
                                 {
@@ -71,17 +64,25 @@
                                 }
                             </RadzenStack>
                         </RadzenCard>
-
                     </RadzenStack>
                 </RadzenColumn>
 
-                @* --- COLONNA CENTRALE (FEED) --- *@
+                @* --- COLONNA DESTRA (Feed Post) --- *@
                 <RadzenColumn Size="12" SizeMD="9">
                     <RadzenStack Gap="1.5rem">
+                        
+                        @* BOX CREAZIONE POST *@
                         <RadzenCard Variant="Variant.Filled" Class="rz-border-radius-2 rz-shadow-2 rz-p-6">
                             <RadzenStack Gap="1.5rem">
                                 <RadzenText TextStyle="TextStyle.H6" Class="rz-font-weight-bold">Crea un nuovo post</RadzenText>
-                                <RadzenTextArea @bind-Value="@nuovoPostContenuto" Placeholder="A cosa stai pensando?" Rows="3" Class="rz-w-100 rz-border-radius-1" Style="background-color: var(--rz-base-background-color);" />
+                                
+                                @if (utenteLoggato != null)
+                                {
+                                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-mb-2">Stai pubblicando come: <b>@utenteLoggato.Nome @utenteLoggato.Cognome</b></RadzenText>
+                                }
+
+                                <RadzenTextArea @bind-Value="@nuovoPostContenuto" Placeholder="A cosa stai pensando?" Rows="3" Class="rz-w-100 rz-border-radius-1" Style="background-color: white;" />
+                                
                                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
                                     <RadzenButton Click="@PubblicaPost"
                                                   Text="Pubblica nel Feed"
@@ -100,13 +101,15 @@
                             @foreach (var post in posts)
                             {
                                 <RadzenCard Variant="Variant.Filled" Class="rz-border-radius-2 rz-shadow-1 rz-p-6">
-                                    <RadzenStack Gap="1.5rem">
+                                    <RadzenStack Gap="1rem">
+                                        
+                                        @* Header: Foto, Nome, Data *@
                                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
-                    
-                                            <div style="width: 56px; height: 56px; border-radius: 50%; overflow: hidden; background-color: var(--rz-primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                            
+                                            @* Avatar con logica Foto/Iniziali *@
+                                            <div style="width: 56px; height: 56px; border-radius: 50%; overflow: hidden; background-color: var(--rz-primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #e0e0e0;">
                                                 @if (!string.IsNullOrEmpty(post.FotoUrl))
                                                 {
-                                                    @* Usiamo ~/ per puntare alla root di wwwroot *@
                                                     <img src="@post.FotoUrl.TrimStart('/')" style="width: 100%; height: 100%; object-fit: cover;" />
                                                 }
                                                 else
@@ -122,9 +125,24 @@
                                                 </RadzenText>
                                             </RadzenStack>
                                         </RadzenStack>
+
+                                        @* CORPO DEL POST: Qui leggiamo il contenuto *@
+                                        <div style="padding: 0.5rem 0;">
+                                            <RadzenText TextStyle="TextStyle.Body1" Style="white-space: pre-wrap; line-height: 1.6; color: #333;">
+                                                @post.Contenuto
+                                            </RadzenText>
+                                        </div>
+
                                     </RadzenStack>
                                 </RadzenCard>
                             }
+                        }
+                        else
+                        {
+                            <RadzenStack AlignItems="AlignItems.Center" Class="rz-p-12">
+                                <RadzenProgressBar Circular="true" Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                                <RadzenText TextStyle="TextStyle.Body2" Class="rz-mt-4">Caricamento feed...</RadzenText>
+                            </RadzenStack>
                         }
                     </RadzenStack>
                 </RadzenColumn>
@@ -142,34 +160,41 @@
 
     protected override async Task OnInitializedAsync() => await CaricaDati();
 
-    private async Task CaricaDati() {
-        try {
-            var lp = await MyService.GetAllPostsAsync();
-            posts = lp.OrderByDescending(p => p.DataPubblicazione).ToList();
+    private async Task CaricaDati()
+    {
+        try
+        {
+            // 1. Logghiamo automaticamente il primo utente (Pierpaolo)
+            utenteLoggato = await MyService.GetPrimoUtenteAsync();
+
+            // 2. Carichiamo tutti i post
+            posts = await MyService.GetAllPostsAsync();
+
+            // 3. Carichiamo avvisi e compleanni
             listaAvvisi = await MyService.GetAvvisiAttiviAsync();
             listaCompleanni = await MyService.GetCompleanniOggiAsync();
         }
-        catch {
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Errore caricamento: {ex.Message}");
             posts = new(); listaAvvisi = new(); listaCompleanni = new();
         }
     }
 
     private async Task PubblicaPost()
     {
-        // Verifica di sicurezza: testo non vuoto e utente esistente
         if (!string.IsNullOrWhiteSpace(nuovoPostContenuto) && utenteLoggato != null)
         {
             try
             {
                 await MyService.InsertPostAsync(utenteLoggato.UtenteId, nuovoPostContenuto);
-                nuovoPostContenuto = "";
-                await CaricaDati();
+                nuovoPostContenuto = ""; // Svuota la textarea
+                await CaricaDati();      // Rinfresca la lista post
                 StateHasChanged();
             }
             catch (Exception ex)
             {
-                // Gestisci l'errore (es. utente non trovato dopo TRUNCATE)
-                Console.WriteLine($"Errore invio: {ex.Message}");
+                Console.WriteLine($"Errore invio post: {ex.Message}");
             }
         }
     }

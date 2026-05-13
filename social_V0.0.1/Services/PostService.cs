@@ -8,21 +8,41 @@ namespace social_V0._0._1.Services
     {
         private readonly string _connectionString = "Server=192.168.16.215,1433;Database=db.social;User Id=app_user;Password=2026Intesi;TrustServerCertificate=True;";
 
+        public async Task<Utente> GetPrimoUtenteAsync()
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+                // Cerchiamo Pierpaolo o il primo utente disponibile
+                var sql = "SELECT TOP 1 UtenteId, Nome, Cognome, FotoUrl FROM dbo.Utenti ORDER BY UtenteId ASC";
+                using (var command = new SqlCommand(sql, connection))
+                {
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            return new Utente
+                            {
+                                UtenteId = (int)reader["UtenteId"],
+                                Nome = reader["Nome"].ToString(),
+                                Cognome = reader["Cognome"].ToString(),
+                                FotoUrl = reader["FotoUrl"]?.ToString()
+                            };
+                        }
+                    }
+                }
+            }
+            return null; // Se restituisce null, il database è vuoto!
+        }
         public async Task InsertPostAsync(int utenteId, string contenuto)
         {
             if (string.IsNullOrWhiteSpace(contenuto)) return;
 
             using (var connection = new SqlConnection(_connectionString))
             {
-                // Verifichiamo che l'utente esista davvero prima di inserire
-                var userExists = await connection.ExecuteScalarAsync<int>(
-                    "SELECT COUNT(1) FROM dbo.Utenti WHERE UtenteId = @id", new { id = utenteId });
-
-                if (userExists > 0)
-                {
-                    var sql = "INSERT INTO dbo.Posts (UtenteId, Contenuto, DataPubblicazione) VALUES (@uId, @cont, GETDATE())";
-                    await connection.ExecuteAsync(sql, new { uId = utenteId, cont = contenuto });
-                }
+                // Uniformato a dbo.Post (singolare) come in GetAllPostsAsync
+                var sql = "INSERT INTO dbo.Post (UtenteId, Contenuto, DataPubblicazione) VALUES (@uId, @cont, GETDATE())";
+                await connection.ExecuteAsync(sql, new { uId = utenteId, cont = contenuto });
             }
         }
         public async Task<List<PostViewModel>> GetAllPostsAsync()
