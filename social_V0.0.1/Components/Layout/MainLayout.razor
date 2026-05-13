@@ -1,25 +1,40 @@
 ﻿@inherits LayoutComponentBase
+@using Radzen.Blazor
+@inject NavigationManager NavManager
 
-<div class="page">
-    <div class="sidebar" style="width: 216px">
-        <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
-
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
-<RadzenComponents />
 <RadzenComponents @rendermode="InteractiveServer" />
+
+<div class="main-container">
+    <RadzenHeader Style="height: 65px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); display: flex; align-items: center; padding: 0 20px; border-bottom: 2px solid var(--brand-primary); position: fixed; top: 0; width: 100%; z-index: 1000;">
+        <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; width: 100%; align-items: center;">
+            
+            @* LOGO *@
+            <div style="display: flex; align-items: center;">
+                <a href="/" style="display: flex; align-items: center; text-decoration: none;">
+                    <img src="intesi-software-house.png" alt="Intesi Logo" style="height: 35px; width: auto;" />
+                </a>
+            </div>
+
+            @* RICERCA *@
+            <div style="display: flex; justify-content: center;">
+                <div style="position: relative; width: 100%; max-width: 400px;">
+                    <RadzenIcon Icon="search" Style="position: absolute; left: 15px; top: 10px; color: var(--brand-primary); z-index: 5;" />
+                    <RadzenTextBox Placeholder="Cerca..."
+                                   Style="width: 100%; border-radius: 50px; padding-left: 45px; background-color: #f0f2f5; border: 1px solid var(--brand-border); height: 40px;" />
+                </div>
+            </div>
+
+            @* BOTTONE ACCEDI *@
+            <div style="display: flex; justify-content: flex-end;">
+                <RadzenButton Text="Accedi"
+                              ButtonStyle="ButtonStyle.Primary"
+                              Style="background-color: var(--brand-primary); border-radius: 10px; font-weight: bold; padding: 0 25px;"
+                              Click="@(() => NavManager.NavigateTo("/login"))" />
+            </div>
+        </div>
+    </RadzenHeader>
+
+    <div class="center-content">
+        @Body
+    </div>
+</div>
